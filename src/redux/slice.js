@@ -1,53 +1,50 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { nanoid } from 'nanoid';
+import { fetchingContacts, addingContact, deletingContact } from './fetching';
 
-const LOCAL_STORAGE_CONTACTS = 'contacts';
+const handlePending = state => {
+  state.isLoading = true;
+};
 
-const contactsArray = [
-  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-];
-
-const contactsInitialState = JSON.parse(
-  localStorage.getItem(
-    LOCAL_STORAGE_CONTACTS ? LOCAL_STORAGE_CONTACTS : contactsArray
-  )
-);
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
 
 const contactsSlice = createSlice({
   name: 'contacts',
-  initialState: contactsInitialState,
-  reducers: {
-    addContact: {
-      reducer(state, action) {
-        state.push(action.payload);
-        setLocalSttorage([...state]);
-      },
-      prepare(text) {
-        return {
-          payload: {
-            id: nanoid(),
-            name: text.name,
-            number: text.number,
-          },
-        };
-      },
+  initialState: {
+    items: [],
+    isLoading: false,
+    error: null,
+  },
+  extraReducers: {
+    [fetchingContacts.pending]: handlePending,
+    [fetchingContacts.fulfilled](state, action) {
+      state.isLoading = false;
+      state.error = null;
+      state.items = action.payload;
     },
-    deleteContact: {
-      reducer(state, action) {
-        const index = state.findIndex(contact => contact.id === action.payload);
-        state.splice(index, 1);
-        setLocalSttorage([...state]);
-      },
+    [fetchingContacts.rejected]: handleRejected,
+    [addingContact.pending]: handlePending,
+    [addingContact.fulfilled](state, action) {
+      state.isLoading = false;
+      state.error = null;
+      state.items.push = action.payload;
     },
+    [addingContact.rejected]: handleRejected,
+    [deletingContact.pending]: handlePending,
+    [deletingContact.fulfilled](state, action) {
+      state.isLoading = false;
+      state.error = null;
+      const index = state.items.findIndex(
+        contact => contact.id === action.payload.id
+      );
+      state.items.splice(index, 1);
+    },
+    [deletingContact.rejected]: handleRejected,
   },
 });
-
-const setLocalSttorage = contacts => {
-  localStorage.setItem(LOCAL_STORAGE_CONTACTS, JSON.stringify(contacts));
-};
 
 const fitlerInitialState = '';
 
@@ -63,7 +60,6 @@ const filterSlice = createSlice({
   },
 });
 
-export const { addContact, deleteContact } = contactsSlice.actions;
 export const contactsReducer = contactsSlice.reducer;
 
 export const { filterChange } = filterSlice.actions;
