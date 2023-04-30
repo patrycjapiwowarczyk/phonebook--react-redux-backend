@@ -2,13 +2,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import css from './ContactListItem.module.css';
 import { useDispatch } from 'react-redux';
-import { deleteContact } from 'redux/slice';
+import { deletingContact } from 'redux/fetching';
 
 export const ContactListItem = ({ contact }) => {
   const dispatch = useDispatch();
 
   const handleClick = () => {
-    dispatch(deleteContact(contact.id));
+    dispatch(deletingContact(contact.id));
   };
 
   return (

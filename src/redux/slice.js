@@ -1,5 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { nanoid } from 'nanoid';
 import { fetchingContacts, addingContact, deletingContact } from './fetching';
 
 const handlePending = state => {
@@ -30,7 +29,7 @@ const contactsSlice = createSlice({
     [addingContact.fulfilled](state, action) {
       state.isLoading = false;
       state.error = null;
-      state.items.push = action.payload;
+      state.items.push(action.payload);
     },
     [addingContact.rejected]: handleRejected,
     [deletingContact.pending]: handlePending,
