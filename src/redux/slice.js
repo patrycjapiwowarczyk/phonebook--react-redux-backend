@@ -1,65 +1,111 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchingContacts, addingContact, deletingContact } from './fetching';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { Notify } from 'notiflix';
 
-const handlePending = state => {
-  state.isLoading = true;
+const mockapiURL =
+  'https://644c175d17e2663b9d000555.mockapi.io/goit-react-hw-07-phonebook/contacts';
+
+const initialState = {
+  contacts: [],
+  searchTerm: '',
+  status: 'idle',
+  error: null,
 };
 
-const handleRejected = (state, action) => {
-  state.isLoading = false;
-  state.error = action.payload;
-};
+export const fetchingContacts = createAsyncThunk(
+  'contacts/fetchContacts',
+  async () => {
+    const response = await axios.get(mockapiURL);
+    return response.data;
+  }
+);
+
+export const addingContact = createAsyncThunk(
+  'contacts/addContact',
+  async (contact, { getState }) => {
+    try {
+      const state = getState();
+      const contactAlreadyExist = state.contacts.contacts.find(
+        e => e.phone === contact.phone
+      );
+      if (contactAlreadyExist) {
+        Notify.warning('Contact already exist');
+        return;
+      }
+
+      const response = await axios.post(mockapiURL, contact);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response.data.message);
+    }
+  }
+);
+
+export const deletingContact = createAsyncThunk(
+  'contacts/deleteContact',
+  async contactId => {
+    try {
+      await axios.delete(`${mockapiURL}/${contactId}`);
+      return contactId;
+    } catch (error) {
+      throw new Error(error.response.data.message);
+    }
+  }
+);
 
 const contactsSlice = createSlice({
   name: 'contacts',
-  initialState: {
-    items: [],
-    isLoading: false,
-    error: null,
-  },
-  extraReducers: {
-    [fetchingContacts.pending]: handlePending,
-    [fetchingContacts.fulfilled](state, action) {
-      state.isLoading = false;
-      state.error = null;
-      state.items = action.payload;
-    },
-    [fetchingContacts.rejected]: handleRejected,
-    [addingContact.pending]: handlePending,
-    [addingContact.fulfilled](state, action) {
-      state.isLoading = false;
-      state.error = null;
-      state.items.push(action.payload);
-    },
-    [addingContact.rejected]: handleRejected,
-    [deletingContact.pending]: handlePending,
-    [deletingContact.fulfilled](state, action) {
-      state.isLoading = false;
-      state.error = null;
-      const index = state.items.findIndex(
-        contact => contact.id === action.payload.id
-      );
-      state.items.splice(index, 1);
-    },
-    [deletingContact.rejected]: handleRejected,
-  },
-});
-
-const fitlerInitialState = '';
-
-const filterSlice = createSlice({
-  name: 'filter',
-  initialState: fitlerInitialState,
+  initialState,
   reducers: {
-    filterChange: {
-      reducer(state, action) {
-        return action.payload;
-      },
+    setSearchTerm: (state, action) => {
+      state.searchTerm = action.payload;
     },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchingContacts.pending, state => {
+        state.status = 'loading';
+      })
+      .addCase(fetchingContacts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.contacts = action.payload;
+      })
+      .addCase(fetchingContacts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(addingContact.pending, state => {
+        state.status = 'loading';
+      })
+      .addCase(addingContact.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        if (action.payload) {
+          state.contacts.push(action.payload);
+        }
+      })
+      .addCase(addingContact.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(deletingContact.pending, state => {
+        state.status = 'loading';
+      })
+      .addCase(deletingContact.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.contacts.findIndex(
+          contact => contact.id === action.payload
+        );
+        if (index !== -1) {
+          state.contacts.splice(index, 1);
+        }
+      })
+      .addCase(deletingContact.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      });
   },
 });
 
 export const contactsReducer = contactsSlice.reducer;
-
-export const { filterChange } = filterSlice.actions;
-export const filterReducer = filterSlice.reducer;
+export const { setSearchTerm } = contactsSlice.actions;

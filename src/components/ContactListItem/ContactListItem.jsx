@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import css from './ContactListItem.module.css';
 import { useDispatch } from 'react-redux';
-import { deletingContact } from 'redux/fetching';
+import { deletingContact } from 'redux/slice';
 
 export const ContactListItem = ({ contact }) => {
   const dispatch = useDispatch();
@@ -14,7 +14,7 @@ export const ContactListItem = ({ contact }) => {
   return (
     <li key={contact.id} className={css['contact-list__item']}>
       <p>
-        {contact.name}: {contact.number}
+        {contact.name}: {contact.phone}
       </p>
       <button
         className={css['contact-list__button']}
@@ -31,6 +31,6 @@ ContactListItem.propTypes = {
   contact: PropTypes.shape({
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
-    number: PropTypes.string.isRequired,
+    phone: PropTypes.string.isRequired,
   }),
 };
