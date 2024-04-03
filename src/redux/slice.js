@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Notify } from 'notiflix';
 
 const mockapiURL =
-  'https://644c175d17e2663b9d000555.mockapi.io/goit-react-hw-07-phonebook/contacts';
+  'https://644c175d17e2663b9d000555.mockapi.io/phonebook--react-redux-backend/contacts';
 
 const initialState = {
   contacts: [],
